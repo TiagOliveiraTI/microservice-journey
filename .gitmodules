@@ -4,3 +4,6 @@
 [submodule "customer-service"]
 	path = customer-service
 	url = https://github.com/TiagOliveiraTI/customer-service
+[submodule "rental_service"]
+	path = rental_service
+	url = https://github.com/TiagOliveiraTI/rental_service
