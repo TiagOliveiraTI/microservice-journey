@@ -1,3 +1,6 @@
 [submodule "product_service"]
 	path = product_service
 	url = https://github.com/TiagOliveiraTI/product_service
+[submodule "customer-service"]
+	path = customer-service
+	url = https://github.com/TiagOliveiraTI/customer-service
