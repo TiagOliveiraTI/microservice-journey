@@ -1,0 +1,52 @@
+@startuml
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+SHOW_PERSON_PORTRAIT()
+' LAYOUT_LEFT_RIGHT()
+
+AddRelTag("async", $lineStyle = DashedLine())
+
+
+Person(admin,"Admin","Pessoa que administra tudo")
+Person(user,"User","Pessoa que deseja alugar algo")
+
+System_Boundary(gateway, "Jornada Microsserviços") {
+
+
+
+Container(customerapp, "customerapp", "Microservice responsável pelos clientes", "Symfony")
+
+Container(productapp, "productapp", "Microservice responsável pelos produtos", "Symfony")
+
+Container(rentailapp, "rentallapp", "Microservice responsável pelas locações", "Symfony")
+
+
+ContainerDb(customerDatabase, "customer_database", "PostgreSql", "Armazena as informações do cliente")
+ContainerDb(productDatabase, "product_database", "PostgreSql", "Armazena as informações do produto")
+ContainerDb(retailDatabase, "retail_database", "PostgreSql", "Armazena as informações da locação")
+
+
+' Tópicos Kafka
+
+ContainerQueue(kafka_customer, "Customer Service", "Kafka", "Dados dos Clientes")
+ContainerQueue(kafka_product, "Product Service", "Kafka", "Dados dos Produtos")
+
+
+' Relacionamentos
+Rel(admin, customerapp, "solicita gestão de cliente em", "HTTP/Json")
+Rel(customerapp, customerDatabase, "Armazena as informações do cliente", "Postgre Protocol")
+Rel(customerapp, kafka_customer, "envia dados de cliente para", "tópico customers", $tags = "async")
+
+Rel(admin, productapp, "solicita inclusão / alteração de cliente")
+Rel(productapp, productDatabase, "Armazena as informações do cliente")
+
+Rel(user, rentailapp, "solicita inclusão / alteração da locação")
+Rel(rentailapp, retailDatabase, "Armazena as informações da locação")
+
+' Tópicos Kafka
+Rel(productapp, kafka_product, "envia dados de produto para", "json", $tags = "async")
+Rel(kafka_customer, rentailapp, "consome dados de cliente a partir do", "tópico customers", $tags = "async")
+Rel(kafka_product, rentailapp, "consome dados de produto em", "json", $tags = "async")
+}
+@enduml
