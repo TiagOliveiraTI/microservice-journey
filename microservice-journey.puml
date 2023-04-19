@@ -1,52 +1,59 @@
-@startuml
+@startuml microservice-journey
 
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include  https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include DEVICONS/postgresql.puml
+!include DEVICONS/symfony.puml
+
 
 SHOW_PERSON_PORTRAIT()
-' LAYOUT_LEFT_RIGHT()
-
-AddRelTag("async", $lineStyle = DashedLine())
-
+' LAYOUT_LEFT_RIGHT() 
+LAYOUT_WITH_LEGEND()
+' SHOW_FLOATING_LEGEND()
 
 Person(admin,"Admin","Pessoa que administra tudo")
-Person(user,"User","Pessoa que deseja alugar algo")
+Person_Ext(user,"User","Pessoa que deseja alugar algo")
 
 System_Boundary(gateway, "Jornada Microsserviços") {
 
+    Container(customerapp, "customerapp", "Microservice responsável pelos clientes", "Symfony", $sprite="symfony", $tags="backend")
 
+    Container(productapp, "productapp", "Microservice responsável pelos produtos", "Symfony", $sprite="symfony", $tags="backend")
 
-Container(customerapp, "customerapp", "Microservice responsável pelos clientes", "Symfony")
+    Container(rentalapp, "rentalapp", "Microservice responsável pelas locações", "Symfony", $sprite="symfony", $tags="backend")
 
-Container(productapp, "productapp", "Microservice responsável pelos produtos", "Symfony")
+    ' ContainerDb_Ext($alias, $label, $techn="", $descr="", $sprite="", $tags="", $link="")
+    ContainerDb(customerDatabase, "customer_database", "PostgreSql", "Armazena as informações do cliente", $sprite="postgresql")
+    ContainerDb(productDatabase, "product_database", "PostgreSql", "Armazena as informações do produto", $sprite="postgresql")
+    ContainerDb(retailDatabase, "retail_database", "PostgreSql", "Armazena as informações da locação", $sprite="postgresql")
 
-Container(rentalapp, "rentalapp", "Microservice responsável pelas locações", "Symfony")
+    ' Tópicos Kafka
+    Container_Boundary(kafka, "Pod Kubernetes") {
+        ContainerQueue_Ext(customers, "Customer Topic", "Kafka", "Dados dos Clientes")
+        ContainerQueue_Ext(products, "Product Topic", "Kafka", "Dados dos Produtos")
+        ContainerQueue_Ext(orders, "Orders Topic", "Kafka", "Dados dos Pedidos")
+    }
+    ' Relacionamentos
 
+    Rel(admin, customerapp, "solicita gestão de cliente em", "HTTP/Json")
+    Rel(customerapp, customerDatabase, "Armazena as informações do cliente", "Postgre Protocol")
+    Rel(customerapp, customers, "envia dados de cliente para", "tópico customers", $tags = "async")
 
-ContainerDb(customerDatabase, "customer_database", "PostgreSql", "Armazena as informações do cliente")
-ContainerDb(productDatabase, "product_database", "PostgreSql", "Armazena as informações do produto")
-ContainerDb(retailDatabase, "retail_database", "PostgreSql", "Armazena as informações da locação")
+    Rel(admin, productapp, "solicita inclusão / alteração de cliente")
+    Rel(productapp, productDatabase, "Armazena as informações do cliente")
 
+    Rel(user, rentalapp, "solicita inclusão / alteração da locação")
+    Rel(rentalapp, retailDatabase, "Armazena as informações da locação")
 
-' Tópicos Kafka
+    ' Tópicos Kafka
 
-ContainerQueue(kafka_customer, "Customer Service", "Kafka", "Dados dos Clientes")
-ContainerQueue(kafka_product, "Product Service", "Kafka", "Dados dos Produtos")
+    Rel(productapp, products, "produz dados de produto no", "products topic", $tags = "async")
+    Rel(customers, rentalapp, "consome dados de cliente a partir do", "tópico customers", $tags = "async")
+    Rel(products, rentalapp, "consome dados de produto em", "json", $tags = "async")
+    Rel(rentalapp, orders, "produz dados de pedido no", "tópico orders", $tags = "async")
+    Rel(orders, customerapp, "consome dados do pedido no", "tópico orders", $tags = "async")
 
-
-' Relacionamentos
-Rel(admin, customerapp, "solicita gestão de cliente em", "HTTP/Json")
-Rel(customerapp, customerDatabase, "Armazena as informações do cliente", "Postgre Protocol")
-Rel(customerapp, kafka_customer, "envia dados de cliente para", "tópico customers", $tags = "async")
-
-Rel(admin, productapp, "solicita inclusão / alteração de cliente")
-Rel(productapp, productDatabase, "Armazena as informações do cliente")
-
-Rel(user, rentalapp, "solicita inclusão / alteração da locação")
-Rel(rentalapp, retailDatabase, "Armazena as informações da locação")
-
-' Tópicos Kafka
-Rel(productapp, kafka_product, "envia dados de produto para", "json", $tags = "async")
-Rel(kafka_customer, rentalapp, "consome dados de cliente a partir do", "tópico customers", $tags = "async")
-Rel(kafka_product, rentalapp, "consome dados de produto em", "json", $tags = "async")
 }
+
 @enduml
