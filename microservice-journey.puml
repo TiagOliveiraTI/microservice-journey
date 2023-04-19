@@ -19,7 +19,7 @@ Container(customerapp, "customerapp", "Microservice responsável pelos clientes"
 
 Container(productapp, "productapp", "Microservice responsável pelos produtos", "Symfony")
 
-Container(rentailapp, "rentallapp", "Microservice responsável pelas locações", "Symfony")
+Container(rentalapp, "rentalapp", "Microservice responsável pelas locações", "Symfony")
 
 
 ContainerDb(customerDatabase, "customer_database", "PostgreSql", "Armazena as informações do cliente")
@@ -41,12 +41,12 @@ Rel(customerapp, kafka_customer, "envia dados de cliente para", "tópico custome
 Rel(admin, productapp, "solicita inclusão / alteração de cliente")
 Rel(productapp, productDatabase, "Armazena as informações do cliente")
 
-Rel(user, rentailapp, "solicita inclusão / alteração da locação")
-Rel(rentailapp, retailDatabase, "Armazena as informações da locação")
+Rel(user, rentalapp, "solicita inclusão / alteração da locação")
+Rel(rentalapp, retailDatabase, "Armazena as informações da locação")
 
 ' Tópicos Kafka
 Rel(productapp, kafka_product, "envia dados de produto para", "json", $tags = "async")
-Rel(kafka_customer, rentailapp, "consome dados de cliente a partir do", "tópico customers", $tags = "async")
-Rel(kafka_product, rentailapp, "consome dados de produto em", "json", $tags = "async")
+Rel(kafka_customer, rentalapp, "consome dados de cliente a partir do", "tópico customers", $tags = "async")
+Rel(kafka_product, rentalapp, "consome dados de produto em", "json", $tags = "async")
 }
 @enduml
